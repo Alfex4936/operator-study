@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNCF Operator White Paper | Interactive Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chosen Palette: Calm Tech -->
+    <!-- Application Structure Plan: A thematic, non-linear SPA using a fixed sidebar for navigation. The structure is designed for exploration rather than linear reading. Key sections are 'Core Concept', 'Maturity Model', 'Security Checklist', 'Frameworks', and 'Real-World Application'. This structure groups related ideas logically and uses interactive components (stepper, filters) to engage the user and make complex information easier to digest than a long text document. -->
+    <!-- Visualization & Content Choices: Report Info: Reconciliation Loop -> Goal: Explain a process -> Viz: Animated HTML/CSS diagram -> Interaction: Visual loop -> Justification: More engaging than static text. | Report Info: Maturity Levels -> Goal: Show progression -> Viz: Interactive vertical stepper -> Interaction: Click to expand details -> Justification: Visually represents hierarchy and allows focused reading. | Report Info: Framework Comparison -> Goal: Compare options -> Viz: Filterable cards -> Interaction: Click filter buttons -> Justification: Allows users to quickly find tools matching their criteria. | CONFIRMING NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .nav-link.active {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            font-weight: 600;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .stepper-item.active .stepper-circle {
+            background-color: #0d6efd;
+            color: white;
+            transform: scale(1.1);
+        }
+        .stepper-item.active .stepper-title {
+            color: #0d6efd;
+            font-weight: 700;
+        }
+        .stepper-line {
+            width: 2px;
+            background-color: #dee2e6;
+            position: absolute;
+            left: 1.25rem;
+            top: 1.25rem;
+            bottom: 1.25rem;
+            transform: translateX(-50%);
+        }
+        .filter-btn.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .reconciliation-box {
+            border: 2px solid #dee2e6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            position: relative;
+        }
+        .reconciliation-arrow {
+            position: absolute;
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        .tooltip-trigger {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dotted #6c757d;
+        }
+    </style>
+</head>
+<body class="flex bg-gray-100">
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0 bg-white shadow-md">
+        <div class="p-4">
+            <h1 class="text-xl font-bold text-gray-800">Operator Deep Dive</h1>
+            <p class="text-sm text-gray-500">Interactive Guide</p>
+        </div>
+        <nav class="mt-4">
+            <ul>
+                <li><a href="#intro" class="nav-link flex items-center p-4 text-gray-700 hover:bg-gray-100 active"><i class="fas fa-home w-6 mr-2"></i> 소개</a></li>
+                <li><a href="#foundation" class="nav-link flex items-center p-4 text-gray-700 hover:bg-gray-100"><i class="fas fa-cube w-6 mr-2"></i> 핵심 개념</a></li>
+                <li><a href="#capabilities" class="nav-link flex items-center p-4 text-gray-700 hover:bg-gray-100"><i class="fas fa-rocket w-6 mr-2"></i> 성숙도 모델</a></li>
+                <li><a href="#security" class="nav-link flex items-center p-4 text-gray-700 hover:bg-gray-100"><i class="fas fa-shield-alt w-6 mr-2"></i> 보안 체크리스트</a></li>
+                <li><a href="#frameworks" class="nav-link flex items-center p-4 text-gray-700 hover:bg-gray-100"><i class="fas fa-tools w-6 mr-2"></i> 개발 프레임워크</a></li>
+                <li><a href="#use-cases" class="nav-link flex items-center p-4 text-gray-700 hover:bg-gray-100"><i class="fab fa-redhat w-6 mr-2"></i> Redis 적용 사례</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Mobile Menu Button -->
+    <button id="menu-toggle" class="sm:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-md shadow-md">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Main Content -->
+    <main class="flex-1 sm:ml-64 p-6 md:p-10 transition-all duration-300">
+        
+        <!-- Section: Introduction -->
+        <section id="intro" class="content-section active">
+            <div class="card p-8 mb-8">
+                <h2 class="text-3xl font-bold mb-4 text-gray-800">CNCF Operator White Paper 심층 분석</h2>
+                <p class="text-lg text-gray-600 mb-6">"Operator는 단순히 애플리케이션을 설치하는 도구가 아닙니다. <strong class="font-semibold text-gray-700">애플리케이션 운영 전문가의 지식을 코드로 구현한 자동화된 SRE(Site Reliability Engineer)</strong>입니다."</p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-4 rounded-md" role="alert">
+                    <p>이 인터랙티브 가이드는 CNCF Operator White Paper의 핵심 내용을 시각적으로 재구성하여, 복잡한 개념을 보다 쉽게 이해하고 탐색할 수 있도록 돕습니다. 좌측 메뉴를 통해 원하는 주제로 바로 이동해 보세요.</p>
+                </div>
+            </div>
+            <div class="card p-8">
+                <h3 class="text-2xl font-semibold mb-4 text-gray-700">가이드에 포함된 핵심 기술과 개념</h3>
+                <div class="flex flex-wrap gap-3">
+                    <span class="flex items-center bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fas fa-dharmachakra mr-2"></i> Kubernetes
+                    </span>
+                    <span class="flex items-center bg-gray-200 text-gray-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fas fa-robot mr-2"></i> Operator Pattern
+                    </span>
+                     <span class="flex items-center bg-cyan-100 text-cyan-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fab fa-golang mr-2"></i> Go (Golang)
+                    </span>
+                    <span class="flex items-center bg-red-100 text-red-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fas fa-cogs mr-2"></i> Operator SDK
+                    </span>
+                    <span class="flex items-center bg-indigo-100 text-indigo-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fas fa-cubes mr-2"></i> Kubebuilder
+                    </span>
+                     <span class="flex items-center bg-green-100 text-green-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fab fa-python mr-2"></i> Python (Kopf)
+                    </span>
+                    <span class="flex items-center bg-gray-200 text-gray-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fas fa-file-code mr-2"></i> Custom Resource (CRD)
+                    </span>
+                    <span class="flex items-center bg-yellow-100 text-yellow-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fas fa-user-shield mr-2"></i> RBAC
+                    </span>
+                    <span class="flex items-center bg-orange-100 text-orange-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fas fa-chart-area mr-2"></i> Prometheus
+                    </span>
+                    <span class="flex items-center bg-purple-100 text-purple-800 text-sm font-semibold px-4 py-2 rounded-full">
+                        <i class="fab fa-git-alt mr-2"></i> GitOps
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Foundation -->
+        <section id="foundation" class="content-section">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">제1장: Operator의 핵심 개념</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-cogs text-2xl text-blue-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">관리 대상 (Operand)</h3>
+                    </div>
+                    <p class="text-gray-600">Operator가 관리하는 실제 소프트웨어 또는 인프라 리소스입니다. (예: Redis 클러스터, Kafka 클러스터, 데이터베이스)</p>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-file-code text-2xl text-green-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">선언적 API (CRD)</h3>
+                    </div>
+                    <p class="text-gray-600">사용자가 '원하는 상태'를 YAML로 정의하는 인터페이스입니다. GitOps 워크플로우의 핵심 요소입니다.</p>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-robot text-2xl text-purple-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">컨트롤러 (Controller)</h3>
+                    </div>
+                    <p class="text-gray-600">Operator의 '뇌' 역할을 하며, '현재 상태'를 '원하는 상태'로 맞추는 조정 루프를 실행합니다.</p>
+                </div>
+            </div>
+            <div class="card p-8 mb-8">
+                <h3 class="text-2xl font-bold mb-4">CR (Custom Resource) 예시: RedisCluster</h3>
+                <p class="text-gray-600 mb-4">
+                    사용자는 아래와 같은 YAML 파일을 작성하여 Operator에게 '어떤 상태의 Redis 클러스터를 원하는지'를 선언적으로 전달합니다. `spec` 필드는 사용자가 정의하고, `status` 필드는 Operator가 현재 상태를 보고하기 위해 업데이트합니다.
+                </p>
+                <pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto text-sm"><code><span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="이 리소스의 Kubernetes API 버전을 정의합니다. CRD를 등록할 때 지정됩니다.">apiVersion:</span></span> db.example.com/v1alpha1
+<span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="리소스의 종류를 나타냅니다. 여기서는 'RedisCluster'입니다.">kind:</span></span> RedisCluster
+<span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="이름, 네임스페이스 등 리소스를 식별하는 메타데이터를 포함합니다.">metadata:</span></span>
+  <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="이 RedisCluster 리소스의 고유한 이름입니다.">name:</span></span> my-redis-cluster
+  <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="이 리소스가 속할 네임스페이스입니다.">namespace:</span></span> my-app-ns
+<span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="사용자가 원하는 '상태(Desired State)'를 정의하는 곳입니다. Operator는 이 명세를 보고 실제 상태를 조정합니다.">spec:</span></span> <span class="text-green-400"># --- 사용자가 정의하는 '원하는 상태' ---</span>
+  <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="생성할 Redis 노드의 수입니다.">clusterSize:</span></span> 3
+  <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="설치할 Redis의 버전입니다.">redisVersion:</span></span> "7.2"
+  <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="데이터 영속성 관련 설정을 정의합니다.">persistence:</span></span>
+    <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="데이터 영속성 사용 여부입니다.">enabled:</span></span> true
+    <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="데이터를 저장할 PVC(PersistentVolumeClaim)가 사용할 스토리지 클래스입니다.">storageClassName:</span></span> "gp2"
+<span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="Operator가 현재 '상태(Current State)'를 보고하는 곳입니다. 이 필드는 Operator에 의해서만 수정됩니다.">status:</span></span> <span class="text-yellow-400"># --- Operator가 보고하는 '현재 상태' ---</span>
+  <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="클러스터의 현재 건강 상태입니다.">currentState:</span></span> "HEALTHY"
+  <span class="text-gray-400"><span class="tooltip-trigger" data-tooltip="현재 준비된(Ready) 상태의 Redis 노드 수입니다.">readyReplicas:</span></span> 3
+</code></pre>
+            </div>
+            <div class="card p-8">
+                <h3 class="text-2xl font-bold mb-4 text-center">조정 루프(Reconciliation Loop) 시각화</h3>
+                <p class="text-center text-gray-600 mb-6">Operator는 아래의 과정을 무한 반복하며 시스템 상태를 유지합니다.</p>
+                <div class="relative grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                    <div class="reconciliation-box"><strong>원하는 상태</strong><br>(Desired State)<p class="text-sm text-gray-500">CRD Spec</p></div>
+                    <div class="text-center text-3xl text-gray-400">→</div>
+                    <div class="reconciliation-box border-blue-500 border-2"><strong>컨트롤러</strong><br>(Controller)<p class="text-sm text-blue-500">Observe → Diff → Act</p></div>
+                    <div class="text-center text-3xl text-gray-400">→</div>
+                    <div class="reconciliation-box"><strong>현재 상태</strong><br>(Current State)<p class="text-sm text-gray-500">Cluster State</p></div>
+                    <div class="col-span-1 md:col-span-5 text-center mt-4">
+                        <i class="fas fa-sync-alt text-3xl text-gray-400 transform -scale-x-100"></i>
+                        <p class="text-gray-600">Continuous Feedback Loop</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Capabilities -->
+        <section id="capabilities" class="content-section">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">제2장: Operator 성숙도 모델</h2>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="w-full md:w-1/3">
+                    <div class="relative">
+                        <div class="stepper-line hidden md:block"></div>
+                        <div id="stepper-nav" class="space-y-4">
+                            <!-- Stepper items will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div id="stepper-content" class="w-full md:w-2/3">
+                    <!-- Stepper content will be injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Security -->
+        <section id="security" class="content-section">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">제3장: 보안 체크리스트</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-user-check text-2xl text-red-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">RBAC 권한 검토</h3>
+                    </div>
+                    <p class="text-gray-600">설치 시 적용되는 Role/ClusterRole을 반드시 확인하고 최소 권한의 원칙을 준수해야 합니다.</p>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-file-download text-2xl text-yellow-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">스크립트 사전 검토</h3>
+                    </div>
+                    <p class="text-gray-600">`kubectl apply -f https://...` 대신, 로컬에 다운로드하여 내용을 확인 후 실행하는 습관이 중요합니다.</p>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-border-all text-2xl text-green-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">네임스페이스 격리</h3>
+                    </div>
+                    <p class="text-gray-600">Operator와 관리 대상을 별도 네임스페이스에 배포하여 보안 사고의 영향을 최소화합니다.</p>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-box-open text-2xl text-blue-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">소프트웨어 공급망 확인</h3>
+                    </div>
+                    <p class="text-gray-600">신뢰할 수 있는 레지스트리의 컨테이너 이미지를 사용하고, 이미지 서명 및 CVE 스캔을 수행합니다.</p>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-lock text-2xl text-indigo-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">Pod 보안 강화</h3>
+                    </div>
+                    <p class="text-gray-600">Pod Security Standards를 준수하고 non-root 유저 실행, 권한 상승 방지 등을 적용합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Frameworks -->
+        <section id="frameworks" class="content-section">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">제4장: 개발 프레임워크 선택 가이드</h2>
+            <div class="mb-6 flex flex-wrap gap-2">
+                <button class="filter-btn active px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition" data-filter="all">전체</button>
+                <button class="filter-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition" data-filter="Go">Go</button>
+                <button class="filter-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition" data-filter="Python">Python</button>
+                <button class="filter-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition" data-filter="Language-agnostic">Language Agnostic</button>
+            </div>
+            <div id="frameworks-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Framework cards will be injected by JS -->
+            </div>
+        </section>
+
+        <!-- Section: Use Cases -->
+        <section id="use-cases" class="content-section">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">제5장: Redis DevOps를 위한 Operator 활용 아이디어</h2>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-3">`RedisCluster` CRD</h3>
+                    <p class="text-gray-600 mb-4">클러스터 모드 Redis를 선언적으로 생성하고, `spec.shards`나 `spec.replicasPerShard` 값을 변경하는 것만으로 손쉽게 스케일 인/아웃을 자동화합니다.</p>
+                    <pre class="bg-gray-100 p-3 rounded-md text-sm text-gray-800"><code>spec:
+  shards: 3
+  replicasPerShard: 1
+  tls: { enabled: true }</code></pre>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-3">`RedisFailover` CRD</h3>
+                    <p class="text-gray-600 mb-4">Sentinel 기반의 고가용성 구성을 정의하고, Master 장애 시 자동 Failover 및 클라이언트 연결 정보 업데이트를 Operator가 처리하도록 합니다.</p>
+                     <pre class="bg-gray-100 p-3 rounded-md text-sm text-gray-800"><code>spec:
+  sentinel: { replicas: 3 }
+  redis: { replicas: 3 }</code></pre>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-3">`RedisBackup` CRD</h3>
+                    <p class="text-gray-600 mb-4">지정된 스케줄에 따라 S3로 RDB/AOF 파일을 자동으로 백업하는 작업을 정의합니다.</p>
+                     <pre class="bg-gray-100 p-3 rounded-md text-sm text-gray-800"><code>spec:
+  schedule: "0 3 * * *"
+  storage:
+    s3: { bucketName: "my-redis-backups" }</code></pre>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-3">`RedisUser` CRD</h3>
+                    <p class="text-gray-600 mb-4">Redis의 사용자 계정과 ACL 규칙을 CRD로 관리하여 GitOps 워크플로우를 통해 사용자 권한을 형상 관리하고 적용할 수 있습니다.</p>
+                     <pre class="bg-gray-100 p-3 rounded-md text-sm text-gray-800"><code>spec:
+  username: "app-user"
+  aclRules: "~* +@all"</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Tooltip Element -->
+    <div id="global-tooltip" class="fixed hidden z-50 px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm" role="tooltip">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+
+            function updateActiveContent(hash) {
+                const targetHash = hash || location.hash || '#intro';
+                
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === targetHash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+                
+                contentSections.forEach(section => {
+                    if (section.id === targetHash.substring(1)) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+                 if (sidebar.classList.contains('translate-x-0')) {
+                    sidebar.classList.remove('translate-x-0');
+                    sidebar.classList.add('-translate-x-full');
+                }
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetHash = this.getAttribute('href');
+                    history.pushState(null, null, targetHash);
+                    updateActiveContent(targetHash);
+                });
+            });
+
+            window.addEventListener('popstate', () => updateActiveContent(location.hash));
+            updateActiveContent(location.hash);
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebar.classList.toggle('translate-x-0');
+            });
+
+            // --- Global Tooltip Logic ---
+            const tooltipElement = document.getElementById('global-tooltip');
+            const tooltipTriggers = document.querySelectorAll('.tooltip-trigger');
+
+            tooltipTriggers.forEach(trigger => {
+                trigger.addEventListener('mouseenter', (event) => {
+                    const tooltipText = trigger.getAttribute('data-tooltip');
+                    tooltipElement.textContent = tooltipText;
+                    tooltipElement.classList.remove('hidden');
+
+                    const triggerRect = trigger.getBoundingClientRect();
+                    const tooltipRect = tooltipElement.getBoundingClientRect();
+
+                    let top = triggerRect.top - tooltipRect.height - 8; // 8px gap
+                    let left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
+
+                    if (top < 0) {
+                        top = triggerRect.bottom + 8;
+                    }
+                    if (left < 0) {
+                        left = 8;
+                    }
+                    if (left + tooltipRect.width > window.innerWidth) {
+                        left = window.innerWidth - tooltipRect.width - 8;
+                    }
+
+                    tooltipElement.style.top = `${top}px`;
+                    tooltipElement.style.left = `${left}px`;
+                });
+
+                trigger.addEventListener('mouseleave', () => {
+                    tooltipElement.classList.add('hidden');
+                });
+            });
+
+
+            // --- Stepper for Capabilities Section ---
+            const stepperData = [
+                {
+                    level: 1,
+                    title: "기본 설치 (Basic Install)",
+                    icon: "fa-download",
+                    description: "CR을 생성하면 애플리케이션과 모든 필요 리소스(Deployment, Service, PVC 등)를 자동으로 배포합니다.",
+                    details: "단순히 Helm 차트를 템플릿화하는 수준을 넘어, Operator는 애플리케이션에 최적화된 초기 구성을 제공합니다. 예를 들어, Redis 클러스터용 Headless Service를 생성하여 Pod 간의 상호 발견을 가능하게 하고, 각 Pod에 맞는 ConfigMap과 안정적인 스토리지를 위한 PersistentVolumeClaim을 자동으로 프로비저닝합니다. 이는 운영자가 수동으로 처리해야 할 여러 단계를 하나의 CR로 자동화한 것입니다.",
+                    code: `apiVersion: db.example.com/v1alpha1
+kind: RedisCluster
+metadata:
+  name: production-cache
+spec:
+  clusterSize: 3`
+                },
+                {
+                    level: 2,
+                    title: "업그레이드 (Seamless Upgrades)",
+                    icon: "fa-arrow-alt-circle-up",
+                    description: "`spec`의 버전 정보를 변경하면 다운타임을 최소화하면서 안전하게 업그레이드를 수행합니다.",
+                    details: "Operator는 애플리케이션의 특성을 이해하여 업그레이드 절차를 최적화합니다. Redis 클러스터 업그레이드 시, Replica 노드들을 먼저 순차적으로 업데이트하고, 제어된 Failover를 실행하여 새로운 버전의 Replica를 Primary로 승격시킵니다. 마지막으로 이전 Primary 노드를 업그레이드하여 서비스 중단 시간을 사실상 0에 가깝게 만듭니다. 사용자는 단지 버전 번호만 변경하면 됩니다.",
+                    code: `# BEFORE
+spec:
+  redisVersion: "7.0"
+
+# AFTER (User's only change)
+spec:
+  redisVersion: "7.2"`
+                },
+                {
+                    level: 3,
+                    title: "전체 생명주기 관리 (Full Lifecycle)",
+                    icon: "fa-sync-alt",
+                    description: "백업/복구, 장애 조치(Failover) 등 애플리케이션의 전체 생명주기를 관리합니다.",
+                    details: "운영에 필수적인 'Day-2' 작업을 자동화합니다. 예를 들어, 아래와 같이 `RedisBackup` CR을 생성하면 Operator는 지정된 스케줄에 맞춰 S3 버킷으로 RDB 스냅샷을 자동으로 업로드하고, 백업 성공 여부를 `status` 필드에 기록합니다. 복구 또한 `RedisRestore` CR을 통해 간단하게 수행할 수 있습니다.",
+                    code: `apiVersion: db.example.com/v1alpha1
+kind: RedisBackup
+metadata:
+  name: daily-backup
+spec:
+  redisClusterName: "production-cache"
+  schedule: "0 3 * * *" # 매일 새벽 3시
+  storage:
+    s3:
+      bucket: "redis-backups-bucket"
+      secret: "aws-s3-credentials"`
+                },
+                {
+                    level: 4,
+                    title: "심층 분석 (Deep Insights)",
+                    icon: "fa-chart-line",
+                    description: "애플리케이션의 핵심 지표(메트릭)와 상태를 외부에 노출하여 모니터링을 용이하게 합니다.",
+                    details: "단순히 CPU/메모리 사용량을 넘어, Redis의 `connected_clients`, `cache_hit_ratio`, `memory_fragmentation_ratio` 와 같은 내부 상태 지표를 Prometheus 형식으로 노출합니다. Operator가 이 과정을 처리하므로, 별도의 Exporter를 배포하고 관리할 필요가 없어지며, 즉시 Grafana 대시보드와 Alertmanager 연동이 가능해집니다.",
+                    code: `# Operator가 노출하는 Prometheus 메트릭 예시
+redis_connected_clients{cluster="prod"} 256
+redis_keyspace_hit_ratio{cluster="prod"} 0.98
+redis_memory_fragmentation_ratio{cluster="prod"} 1.05`
+                },
+                {
+                    level: 5,
+                    title: "자동 운영 (Auto Pilot)",
+                    icon: "fa-plane",
+                    description: "외부 지표나 내부 상태에 따라 Operator가 스스로 판단하여 운영 작업을 수행합니다.",
+                    details: "Operator는 단순한 자동화를 넘어 지능적인 운영을 수행합니다. 예를 들어, `RedisCluster` CR에 오토스케일링 정책을 정의하면, Operator는 Prometheus 메트릭을 지속적으로 관찰합니다. 연결된 클라이언트 수가 임계치를 넘으면 자동으로 Read Replica 수를 늘리고, 트래픽이 줄어들면 다시 줄여 비용을 최적화하는 등의 작업을 사람의 개입 없이 수행합니다.",
+                    code: `spec:
+  clusterSize: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetMetric: 
+      name: "connected_clients_per_replica"
+      targetValue: 1000`
+                },
+            ];
+
+            const stepperNav = document.getElementById('stepper-nav');
+            const stepperContent = document.getElementById('stepper-content');
+
+            stepperData.forEach((item, index) => {
+                const navItem = document.createElement('div');
+                navItem.className = `stepper-item flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-100 ${index === 0 ? 'active' : ''}`;
+                navItem.dataset.level = item.level;
+                navItem.innerHTML = `
+                    <div class="stepper-circle flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-600 font-bold transition-all duration-300">
+                        ${item.level}
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="stepper-title text-lg font-semibold text-gray-700 transition-all duration-300">${item.title}</h4>
+                    </div>
+                `;
+                stepperNav.appendChild(navItem);
+
+                const contentItem = document.createElement('div');
+                contentItem.className = `stepper-content-item card p-6 ${index === 0 ? '' : 'hidden'}`;
+                contentItem.dataset.level = item.level;
+                let contentHTML = `
+                    <div class="flex items-center mb-4">
+                        <i class="fas ${item.icon} text-3xl text-blue-500 mr-4"></i>
+                        <div>
+                           <h3 class="text-2xl font-bold text-gray-800">Level ${item.level}: ${item.title}</h3>
+                           <p class="text-md text-gray-500">${item.description}</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed mb-4">${item.details}</p>
+                `;
+                if (item.code) {
+                    contentHTML += `<pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto text-sm"><code>${item.code}</code></pre>`;
+                }
+                contentItem.innerHTML = contentHTML;
+                stepperContent.appendChild(contentItem);
+            });
+            
+            document.querySelectorAll('.stepper-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const level = this.dataset.level;
+                    document.querySelectorAll('.stepper-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.stepper-content-item').forEach(c => {
+                        if(c.dataset.level === level) c.classList.remove('hidden');
+                        else c.classList.add('hidden');
+                    });
+                });
+            });
+
+            // --- Filter for Frameworks Section ---
+            const frameworksData = [
+                { name: "Kubebuilder", lang: "Go", desc: "Operator 개발의 사실상 표준. CRD, Controller, Webhook의 기본 골격을 생성합니다. 유연성이 높습니다.", target: "Go에 익숙하며 Operator의 내부 동작을 깊이 있게 제어하고 싶은 개발자." },
+                { name: "Operator SDK", lang: "Go", desc: "Kubebuilder 기반으로 테스트, 패키징, 배포(OLM 연동) 등 추가적인 편의 기능을 제공합니다.", target: "Go 개발자에게 가장 추천. 범용적이고 강력한 생태계를 원할 때." },
+                { name: "Kopf", lang: "Python", desc: "Python 데코레이터를 사용하여 매우 간결하고 직관적으로 Operator 로직을 작성할 수 있습니다.", target: "Python이 주력 언어인 팀이나, 머신러닝 모델 서빙 등 Python 생태계 활용이 필요할 때." },
+                { name: "Metacontroller", lang: "Language-agnostic", desc: "컨트롤러 로직을 웹훅(HTTP API)으로 구현하여 어떤 언어로든 개발 가능합니다.", target: "빠른 프로토타이핑이나, 다양한 언어를 사용하는 환경, 또는 기존 시스템과의 연동이 필요할 때." },
+            ];
+            
+            const frameworksGrid = document.getElementById('frameworks-grid');
+            
+            function renderFrameworks(filter) {
+                frameworksGrid.innerHTML = '';
+                const filteredData = (filter === 'all') ? frameworksData : frameworksData.filter(f => f.lang === filter);
+                
+                filteredData.forEach(fw => {
+                    const card = document.createElement('div');
+                    card.className = "card p-6 framework-card";
+                    card.dataset.lang = fw.lang;
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                             <h3 class="text-xl font-bold text-gray-800">${fw.name}</h3>
+                             <span class="px-3 py-1 text-xs font-semibold rounded-full ${fw.lang === 'Go' ? 'bg-blue-100 text-blue-800' : (fw.lang === 'Python' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')}">${fw.lang}</span>
+                        </div>
+                        <p class="text-gray-600 mt-2 mb-4">${fw.desc}</p>
+                        <div class="bg-gray-50 p-3 rounded-md">
+                            <p class="text-sm font-semibold text-gray-800">추천 대상:</p>
+                            <p class="text-sm text-gray-600">${fw.target}</p>
+                        </div>
+                    `;
+                    frameworksGrid.appendChild(card);
+                });
+            }
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filter = this.dataset.filter;
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    renderFrameworks(filter);
+                });
+            });
+            
+            renderFrameworks('all');
+        });
+    </script>
+</body>
+</html>
